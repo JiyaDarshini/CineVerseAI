@@ -214,10 +214,11 @@ export async function saveProjectToNeon(
     await initNeonDatabaseSchema();
 
     if (userId) {
+      const emailFallback = `${userId.toLowerCase()}@cineverse.local`;
       await sql`
         INSERT INTO users (id, name, email, password_hash, role, created_at, last_login)
-        VALUES (${userId}, 'Filmmaker', ${userId.toLowerCase()} || '@cineverse.local', 'demo_hash', 'Director', NOW(), NOW())
-        ON CONFLICT (id) DO NOTHING;
+        VALUES (${userId}, 'Filmmaker', ${emailFallback}, 'demo_hash', 'Director', NOW(), NOW())
+        ON CONFLICT (id) DO UPDATE SET last_login = NOW();
       `;
     }
 
@@ -239,6 +240,12 @@ export async function saveProjectToNeon(
         title = ${project.title},
         tagline = ${project.tagline},
         genre = ${project.genre},
+        language = ${project.language},
+        target_industry = ${project.targetIndustry},
+        target_audience = ${project.targetAudience},
+        budget_range = ${project.estimatedBudgetRange},
+        production_type = ${project.productionType},
+        raw_screenplay_text = ${project.rawScreenplayText || ''},
         story_analysis = ${JSON.stringify(project.storyAnalysis)},
         characters = ${JSON.stringify(project.characters)},
         relationships = ${JSON.stringify(project.relationships)},
@@ -248,8 +255,10 @@ export async function saveProjectToNeon(
         ai_insights = ${JSON.stringify(project.aiInsights)},
         updated_at = NOW();
     `;
+    console.log('[NeonService] Successfully persisted project:', project.title, 'for user:', userId);
   } catch (err) {
-    console.warn('[NeonService] Could not persist project to Neon DB:', err);
+    console.error('[NeonService] Failed to persist project to Neon DB:', err);
+    throw err;
   }
 }
 
