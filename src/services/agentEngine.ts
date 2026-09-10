@@ -61,27 +61,52 @@ export async function analyzeScreenplayScript(params: {
       });
 
       if (geminiResult && geminiResult.characters && geminiResult.characters.length > 0) {
-        // Sanitize and ensure full structural integrity
+        // Sanitize and ensure full structural integrity with MANDATORY 5 ACTORS PER CHARACTER
         const sanitizedCharacters = (geminiResult.characters as CharacterProfile[]).map((char, cIdx) => {
-          const validRecs = char.recommendations && char.recommendations.length > 0
-            ? char.recommendations
-            : generateActorRecommendationsForCharacter(char.name, char.role || 'Protagonist', targetIndustry, genre);
+          const role = char.role || (cIdx === 0 ? 'Protagonist' : cIdx === 1 ? 'Antagonist' : 'Supporting Lead');
+          const fallbackRecs = generateActorRecommendationsForCharacter(char.name, role, targetIndustry, genre);
+          const rawRecs = Array.isArray(char.recommendations) ? char.recommendations : [];
+
+          // Merge and fill up to mandatory 5 actors
+          const mergedRecs: ActorRecommendation[] = [...rawRecs];
+          for (const fRec of fallbackRecs) {
+            if (mergedRecs.length >= 5) break;
+            if (!mergedRecs.some(r => r.name?.toLowerCase() === fRec.name?.toLowerCase())) {
+              mergedRecs.push(fRec);
+            }
+          }
+
+          const finalRecs = mergedRecs.slice(0, 5).map((rec, rIdx) => ({
+            ...rec,
+            id: rec.id || `rec-gemini-${cIdx}-${rIdx}`,
+            name: rec.name || fallbackRecs[rIdx]?.name || `Actor ${rIdx + 1}`,
+            wikiQueryName: rec.wikiQueryName || rec.name || fallbackRecs[rIdx]?.wikiQueryName || `Actor`,
+            rank: (rIdx + 1) as (1 | 2 | 3 | 4 | 5),
+            matchPercentage: rec.matchPercentage || (96 - rIdx * 3),
+            rubric: rec.rubric || {
+              actingStyleMatch: Math.max(18, 25 - rIdx),
+              ageAppearance: 14,
+              genreExperience: 14,
+              emotionalRange: 15,
+              previousRoleSimilarity: 13,
+              screenPresence: 9,
+              marketFit: Math.max(3, 5 - rIdx)
+            },
+            reasoning: rec.reasoning || fallbackRecs[rIdx]?.reasoning || `Highly suited for ${char.name} based on dramatic range and industry alignment.`,
+            strengths: rec.strengths && rec.strengths.length > 0 ? rec.strengths : ['Commanding screen presence', 'Proven marquee draw'],
+            potentialChallenge: rec.potentialChallenge || 'Requires pre-production calendar alignment.',
+            industry: rec.industry || targetIndustry,
+            experienceLevel: rec.experienceLevel || (rIdx < 2 ? 'Superstar / A-List' : rIdx < 4 ? 'Established Lead' : 'Mid-Career'),
+            budgetImpact: rec.budgetImpact || (rIdx < 2 ? 'Premium' : rIdx < 4 ? 'Medium' : 'Low'),
+            notablePastRoles: rec.notablePastRoles && rec.notablePastRoles.length > 0 ? rec.notablePastRoles : ['Acclaimed Feature Film'],
+          }));
 
           return {
             ...char,
             id: char.id || `char-gemini-${Date.now()}-${cIdx}`,
             name: char.name || `Lead Character ${cIdx + 1}`,
-            role: char.role || (cIdx === 0 ? 'Protagonist' : cIdx === 1 ? 'Antagonist' : 'Supporting Lead'),
-            recommendations: validRecs.map((rec, rIdx) => ({
-              ...rec,
-              id: rec.id || `rec-gemini-${cIdx}-${rIdx}`,
-              wikiQueryName: rec.wikiQueryName || rec.name,
-              rank: rec.rank || rIdx + 1,
-              matchPercentage: rec.matchPercentage || (95 - rIdx * 3),
-              rubric: rec.rubric || { actingStyleMatch: 24, ageAppearance: 14, genreExperience: 14, emotionalRange: 15, previousRoleSimilarity: 13, screenPresence: 9, marketFit: 5 },
-              strengths: rec.strengths || ['High dramatic conviction', 'Strong marquee draw'],
-              notablePastRoles: rec.notablePastRoles || ['Acclaimed Feature'],
-            })),
+            role: role as any,
+            recommendations: finalRecs,
           };
         });
 
@@ -909,7 +934,88 @@ function generateActorRecommendationsForCharacter(
     ];
   }
 
-  // 5. HOLLYWOOD / INTERNATIONAL / INDIE
+  // 5. KANNADA CINEMA (SANDALWOOD)
+  if (industry === 'Kannada Cinema (Sandalwood)') {
+    return [
+      {
+        id: `rec-san-1`,
+        name: 'Yash (actor)',
+        wikiQueryName: 'Yash (actor)',
+        rank: 1,
+        matchPercentage: 97,
+        rubric: { actingStyleMatch: 25, ageAppearance: 15, genreExperience: 15, emotionalRange: 15, previousRoleSimilarity: 14, screenPresence: 9, marketFit: 4 },
+        reasoning: `Yash's iconic screen presence, explosive mass charisma, and pan-Indian box office authority make him the definitive anchor for ${charName}.`,
+        strengths: ['Unmatched pan-Indian box office authority', 'Commanding screen presence', 'Dynamic action execution'],
+        potentialChallenge: 'Top-tier budget allocation required.',
+        industry: 'Kannada Cinema (Sandalwood)',
+        experienceLevel: 'Superstar / A-List',
+        budgetImpact: 'Premium',
+        notablePastRoles: ['K.G.F: Chapter 1', 'K.G.F: Chapter 2', 'Toxic (film)', 'Mr. and Mrs. Ramachari']
+      },
+      {
+        id: `rec-san-2`,
+        name: 'Rishab Shetty',
+        wikiQueryName: 'Rishab Shetty',
+        rank: 2,
+        matchPercentage: 94,
+        rubric: { actingStyleMatch: 24, ageAppearance: 15, genreExperience: 15, emotionalRange: 15, previousRoleSimilarity: 13, screenPresence: 8, marketFit: 4 },
+        reasoning: `Rishab Shetty's visceral intensity, folkloric rootedness, and National Award-winning physical stamina bring immense authenticity to ${charName}.`,
+        strengths: ['Rooted emotional conviction', 'National Award-winning performance', 'Deep cinematic vision'],
+        potentialChallenge: 'Demanding filming environments.',
+        industry: 'Kannada Cinema (Sandalwood)',
+        experienceLevel: 'Superstar / A-List',
+        budgetImpact: 'Premium',
+        notablePastRoles: ['Kantara (film)', 'Kantara: Chapter 1', 'Garuda Gamana Vrishabha Vahana', 'Bell Bottom (2019 film)']
+      },
+      {
+        id: `rec-san-3`,
+        name: 'Rakshit Shetty',
+        wikiQueryName: 'Rakshit Shetty',
+        rank: 3,
+        matchPercentage: 91,
+        rubric: { actingStyleMatch: 24, ageAppearance: 14, genreExperience: 14, emotionalRange: 14, previousRoleSimilarity: 13, screenPresence: 8, marketFit: 4 },
+        reasoning: `Rakshit Shetty brings sensitive naturalism, deep emotional containment, and intelligent modern nuance to the role.`,
+        strengths: ['Subtle emotional depth', 'High urban & global critical acclaim', 'Exceptional character dedication'],
+        potentialChallenge: 'Prefers nuanced, non-formulaic narratives.',
+        industry: 'Kannada Cinema (Sandalwood)',
+        experienceLevel: 'Established Lead',
+        budgetImpact: 'Medium',
+        notablePastRoles: ['Sapta Saagaradaache Ello – Side A', '777 Charlie', 'Ulidavaru Kandanthe', 'Avane Srimannarayana']
+      },
+      {
+        id: `rec-san-4`,
+        name: 'Shiva Rajkumar',
+        wikiQueryName: 'Shiva Rajkumar',
+        rank: 4,
+        matchPercentage: 88,
+        rubric: { actingStyleMatch: 23, ageAppearance: 14, genreExperience: 13, emotionalRange: 14, previousRoleSimilarity: 12, screenPresence: 8, marketFit: 4 },
+        reasoning: `Dr. Shiva Rajkumar brings veteran swagger, infectious screen energy, and legendary dramatic heritage.`,
+        strengths: ['Legendary screen weight', 'Iconic swagger & dialogue timing', 'Massive multi-generational fanbase'],
+        potentialChallenge: 'Needs bespoke high-energy staging.',
+        industry: 'Kannada Cinema (Sandalwood)',
+        experienceLevel: 'Superstar / A-List',
+        budgetImpact: 'Premium',
+        notablePastRoles: ['Jailer (2023 film)', 'Mufti (film)', 'Tagaru', 'Om (1995 film)']
+      },
+      {
+        id: `rec-san-5`,
+        name: 'Rukmini Vasanth',
+        wikiQueryName: 'Rukmini Vasanth',
+        rank: 5,
+        matchPercentage: 84,
+        rubric: { actingStyleMatch: 22, ageAppearance: 15, genreExperience: 13, emotionalRange: 14, previousRoleSimilarity: 11, screenPresence: 7, marketFit: 2 },
+        reasoning: `Rukmini Vasanth delivers heartbreaking emotional vulnerability, classical poise, and radiant screen truth.`,
+        strengths: ['Profound emotional honesty', 'Rapidly rising pan-Indian appeal', 'Exceptional subtle restraint'],
+        potentialChallenge: 'Younger age dynamic profile.',
+        industry: 'Kannada Cinema (Sandalwood)',
+        experienceLevel: 'Emerging Talent',
+        budgetImpact: 'Low',
+        notablePastRoles: ['Sapta Saagaradaache Ello – Side A', 'Bageera', 'Birbal Trilogy Case 1']
+      }
+    ];
+  }
+
+  // 6. HOLLYWOOD / INTERNATIONAL / INDIE
   return [
     {
       id: `rec-holly-1`,

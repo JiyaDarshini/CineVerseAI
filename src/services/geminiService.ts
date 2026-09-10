@@ -66,7 +66,11 @@ SCREENPLAY CONTENT / EXCERPT:
 ${params.scriptText}
 """
 
-Execute your 7-agent pipeline and return a complete JSON response strictly adhering to this schema:
+Execute your 7-agent pipeline and return a complete JSON response strictly adhering to this schema.
+CRITICAL MANDATORY INSTRUCTION FOR CASTING:
+For EVERY character, you MUST provide an array of EXACTLY 5 distinct real-world actors (ranked 1, 2, 3, 4, 5) suitable for ${params.targetIndustry}. Never return fewer than 5 actors per character.
+
+JSON SCHEMA:
 {
   "storyAnalysis": {
     "logline": "A compelling 1-2 sentence logline capturing the core protagonist goal and central conflict.",
@@ -95,12 +99,12 @@ Execute your 7-agent pipeline and return a complete JSON response strictly adher
       "recommendations": [
         {
           "id": "rec-1",
-          "name": "Real prominent actor name from ${params.targetIndustry}",
-          "wikiQueryName": "Wikipedia title for actor",
+          "name": "Actor 1 (Real prominent actor from ${params.targetIndustry})",
+          "wikiQueryName": "Exact Wikipedia article name",
           "rank": 1,
           "matchPercentage": 96,
           "rubric": {
-            "actingStyleMatch": 24,
+            "actingStyleMatch": 25,
             "ageAppearance": 15,
             "genreExperience": 14,
             "emotionalRange": 15,
@@ -115,6 +119,66 @@ Execute your 7-agent pipeline and return a complete JSON response strictly adher
           "experienceLevel": "Superstar / A-List",
           "budgetImpact": "Premium",
           "notablePastRoles": ["Role 1", "Role 2", "Role 3"]
+        },
+        {
+          "id": "rec-2",
+          "name": "Actor 2",
+          "wikiQueryName": "Wikipedia name",
+          "rank": 2,
+          "matchPercentage": 93,
+          "rubric": { "actingStyleMatch": 24, "ageAppearance": 15, "genreExperience": 14, "emotionalRange": 14, "previousRoleSimilarity": 13, "screenPresence": 8, "marketFit": 5 },
+          "reasoning": "...",
+          "strengths": ["..."],
+          "potentialChallenge": "...",
+          "industry": "${params.targetIndustry}",
+          "experienceLevel": "Superstar / A-List",
+          "budgetImpact": "Premium",
+          "notablePastRoles": ["..."]
+        },
+        {
+          "id": "rec-3",
+          "name": "Actor 3",
+          "wikiQueryName": "Wikipedia name",
+          "rank": 3,
+          "matchPercentage": 90,
+          "rubric": { "actingStyleMatch": 23, "ageAppearance": 14, "genreExperience": 14, "emotionalRange": 14, "previousRoleSimilarity": 13, "screenPresence": 8, "marketFit": 4 },
+          "reasoning": "...",
+          "strengths": ["..."],
+          "potentialChallenge": "...",
+          "industry": "${params.targetIndustry}",
+          "experienceLevel": "Established Lead",
+          "budgetImpact": "Medium",
+          "notablePastRoles": ["..."]
+        },
+        {
+          "id": "rec-4",
+          "name": "Actor 4",
+          "wikiQueryName": "Wikipedia name",
+          "rank": 4,
+          "matchPercentage": 87,
+          "rubric": { "actingStyleMatch": 22, "ageAppearance": 14, "genreExperience": 13, "emotionalRange": 14, "previousRoleSimilarity": 12, "screenPresence": 8, "marketFit": 4 },
+          "reasoning": "...",
+          "strengths": ["..."],
+          "potentialChallenge": "...",
+          "industry": "${params.targetIndustry}",
+          "experienceLevel": "Established Lead",
+          "budgetImpact": "Medium",
+          "notablePastRoles": ["..."]
+        },
+        {
+          "id": "rec-5",
+          "name": "Actor 5",
+          "wikiQueryName": "Wikipedia name",
+          "rank": 5,
+          "matchPercentage": 83,
+          "rubric": { "actingStyleMatch": 21, "ageAppearance": 14, "genreExperience": 12, "emotionalRange: 13, "previousRoleSimilarity": 11, "screenPresence": 7, "marketFit": 3 },
+          "reasoning": "...",
+          "strengths": ["..."],
+          "potentialChallenge": "...",
+          "industry": "${params.targetIndustry}",
+          "experienceLevel": "Mid-Career",
+          "budgetImpact": "Low",
+          "notablePastRoles": ["..."]
         }
       ]
     }
