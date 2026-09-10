@@ -302,3 +302,23 @@ export async function fetchUserProjectsFromNeon(userId: string): Promise<MoviePr
     return [];
   }
 }
+
+/**
+ * Delete movie project from Neon Postgres
+ */
+export async function deleteProjectFromNeon(projectId: string): Promise<boolean> {
+  const sql = getSqlExecutor();
+  if (!sql) return false;
+
+  try {
+    await sql`
+      DELETE FROM movie_projects 
+      WHERE id = ${projectId};
+    `;
+    console.log('[NeonService] Deleted project:', projectId);
+    return true;
+  } catch (err) {
+    console.error('[NeonService] Failed to delete project from Neon DB:', err);
+    return false;
+  }
+}

@@ -12,7 +12,10 @@ import {
   Film,
   Bot,
   Lightbulb,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  FolderKanban,
+  CheckCircle2
 } from 'lucide-react';
 
 interface DashboardHomeViewProps {
@@ -22,6 +25,8 @@ interface DashboardHomeViewProps {
   onSelectTab: (tab: TabType) => void;
   onOpenCreateModal: () => void;
   onOpenAssistant: () => void;
+  onSelectProject?: (id: string) => void;
+  onDeleteProject?: (id: string) => void;
 }
 
 export const DashboardHomeView: React.FC<DashboardHomeViewProps> = ({
@@ -31,6 +36,8 @@ export const DashboardHomeView: React.FC<DashboardHomeViewProps> = ({
   onSelectTab,
   onOpenCreateModal,
   onOpenAssistant,
+  onSelectProject,
+  onDeleteProject,
 }) => {
   const totalCharacters = projects.reduce((acc, p) => acc + p.characters.length, 0);
   const totalRecs = projects.reduce((acc, p) => acc + p.characters.reduce((cAcc, c) => cAcc + c.recommendations.length, 0), 0);
@@ -287,6 +294,106 @@ export const DashboardHomeView: React.FC<DashboardHomeViewProps> = ({
               <span className="text-[#F1F0EC] font-medium">{project.locations.length} Scouted</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Studio Project Portfolio Section */}
+      <div className="bg-[#141416] border border-[#302f33] rounded-sm p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#232326]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-[#C6A24D]/10 border border-[#C6A24D]/30 flex items-center justify-center text-[#E8C878]">
+              <FolderKanban className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-serif font-bold text-base text-[#F1F0EC]">
+                Studio Project Roster ({projects.length})
+              </h3>
+              <p className="text-[11px] text-[#96959c]">Manage, switch, or delete your movie development projects</p>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenCreateModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#C6A24D] hover:bg-[#d8b45d] text-[#0A0A0B] text-xs font-bold transition-all shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Screenplay</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((p) => {
+            const isActive = p.id === project.id;
+            return (
+              <div
+                key={p.id}
+                className={`p-4 rounded-sm border transition-all flex flex-col justify-between ${
+                  isActive
+                    ? 'bg-[#1B1B1E] border-[#C6A24D]/60 shadow-[0_0_15px_rgba(198,162,77,0.15)]'
+                    : 'bg-[#141416] border-[#232326] hover:border-[#302f33]'
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h4 className="font-serif font-bold text-sm text-[#F1F0EC] truncate">
+                      {p.title}
+                    </h4>
+                    {isActive ? (
+                      <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-[#C6A24D]/20 text-[#E8C878] font-bold border border-[#C6A24D]/40 shrink-0">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Active
+                      </span>
+                    ) : (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#202023] text-[#96959c] border border-[#302f33] shrink-0">
+                        {p.targetIndustry}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#96959c] line-clamp-2 italic mb-3">
+                    "{p.storyAnalysis.logline || p.tagline || 'Screenplay in development'}"
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-[10px] text-[#96959c] mb-4">
+                    <span className="px-1.5 py-0.5 rounded bg-[#1B1B1E] border border-[#232326]">
+                      {p.genre}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#1B1B1E] border border-[#232326]">
+                      {p.characters.length} Chars
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#1B1B1E] border border-[#232326]">
+                      {p.estimatedBudgetRange}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-[#232326] text-xs">
+                  {isActive ? (
+                    <span className="text-[11px] text-[#E8C878] font-medium font-serif">Currently Loaded</span>
+                  ) : (
+                    <button
+                      onClick={() => onSelectProject?.(p.id)}
+                      className="text-xs text-[#E8C878] hover:text-[#f3db98] font-semibold flex items-center gap-1 transition-colors"
+                    >
+                      <span>Switch to Project</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
+
+                  {onDeleteProject && (
+                    <button
+                      title="Delete Project"
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to delete "${p.title}"? This cannot be undone.`)) {
+                          onDeleteProject(p.id);
+                        }
+                      }}
+                      className="p-1.5 rounded hover:bg-rose-500/20 text-[#6d6c72] hover:text-rose-400 transition-colors ml-auto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

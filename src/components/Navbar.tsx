@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { MovieProject, UserProfile } from '../types';
-import { Film, ChevronDown, Plus, Download, LogOut } from 'lucide-react';
+import { Film, ChevronDown, Plus, Download, LogOut, Trash2 } from 'lucide-react';
 
 interface NavbarProps {
   currentProject: MovieProject;
   projects: MovieProject[];
   onSelectProject: (id: string) => void;
+  onDeleteProject?: (id: string) => void;
   onOpenCreateModal: () => void;
   onOpenExportModal: () => void;
   user: UserProfile | null;
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentProject,
   projects,
   onSelectProject,
+  onDeleteProject,
   onOpenCreateModal,
   onOpenExportModal,
   user,
@@ -66,30 +68,48 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {dropdownOpen && (
-            <div className="absolute left-0 mt-2 w-72 bg-[#141416] border border-[#C6A24D]/40 rounded-sm shadow-2xl py-2 z-50 animate-fadeIn">
-              <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#8a763c] tracking-wider border-b border-[#232326]">
-                Switch Active Project
+            <div className="absolute left-0 mt-2 w-80 bg-[#141416] border border-[#C6A24D]/40 rounded-sm shadow-2xl py-2 z-50 animate-fadeIn">
+              <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-[#8a763c] tracking-wider border-b border-[#232326] flex items-center justify-between">
+                <span>Switch Active Project</span>
+                <span className="text-[9px] text-[#6d6c72] normal-case font-normal">{projects.length} Total</span>
               </div>
-              <div className="max-h-60 overflow-y-auto py-1">
+              <div className="max-h-64 overflow-y-auto py-1 divide-y divide-[#232326]/50">
                 {projects.map((p) => (
-                  <button
+                  <div
                     key={p.id}
                     onClick={() => {
                       onSelectProject(p.id);
                       setDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#1B1B1E] transition-colors ${
+                    className={`group/proj w-full text-left px-3 py-2.5 text-xs flex items-center justify-between hover:bg-[#1B1B1E] cursor-pointer transition-colors ${
                       p.id === currentProject.id ? 'bg-[#C6A24D]/10 text-[#E8C878] font-medium' : 'text-[#F1F0EC]'
                     }`}
                   >
-                    <div className="truncate mr-2">
-                      <div className="font-serif font-semibold">{p.title}</div>
-                      <div className="text-[10px] text-[#96959c]">{p.targetIndustry} • {p.genre}</div>
+                    <div className="truncate mr-2 flex-1">
+                      <div className="font-serif font-semibold truncate flex items-center gap-1.5">
+                        <span className="truncate">{p.title}</span>
+                        {p.id === currentProject.id && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#C6A24D]/20 text-[#E8C878] font-bold shrink-0">Active</span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-[#96959c] truncate">{p.targetIndustry} • {p.genre}</div>
                     </div>
-                    {p.id === currentProject.id && (
-                      <span className="text-[10px] text-[#E8C878] font-bold">Active</span>
+
+                    {onDeleteProject && (
+                      <button
+                        title="Delete Project"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Are you sure you want to delete "${p.title}"?`)) {
+                            onDeleteProject(p.id);
+                          }
+                        }}
+                        className="opacity-40 group-hover/proj:opacity-100 hover:!opacity-100 p-1.5 rounded hover:bg-rose-500/20 text-[#96959c] hover:text-rose-400 transition-all shrink-0 ml-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
               <div className="p-2 border-t border-[#232326]">

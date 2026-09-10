@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MovieProject, UserProfile } from './types';
 import { SAMPLE_PROJECTS } from './data/sampleProjects';
 import { analyzeScreenplayScript } from './services/agentEngine';
-import { saveProjectToNeon, fetchUserProjectsFromNeon, isNeonConfigured } from './services/neonService';
+import { saveProjectToNeon, fetchUserProjectsFromNeon, deleteProjectFromNeon, isNeonConfigured } from './services/neonService';
 
 // Components
 import { Navbar } from './components/Navbar';
@@ -72,6 +72,26 @@ export function App() {
   }, [currentUser]);
 
   const activeProject = projects.find((p) => p.id === activeProjectId) || projects[0];
+
+  const handleDeleteProject = async (projectId: string) => {
+    const updated = projects.filter((p) => p.id !== projectId);
+    const nextProjects = updated.length > 0 ? updated : SAMPLE_PROJECTS;
+    setProjects(nextProjects);
+
+    // Switch active project if we deleted the currently active one
+    if (activeProjectId === projectId) {
+      setActiveProjectId(nextProjects[0].id);
+    }
+
+    // Persist deletion to Neon Postgres backend
+    if (currentUser?.id && isNeonConfigured()) {
+      try {
+        await deleteProjectFromNeon(projectId);
+      } catch (err) {
+        console.error('Failed to delete project from Neon DB:', err);
+      }
+    }
+  };
 
   const handleLaunchNewScriptAnalysis = async (metadata: any) => {
     setIsCreateModalOpen(false);
@@ -185,6 +205,7 @@ export function App() {
         currentProject={activeProject}
         projects={projects}
         onSelectProject={(id) => setActiveProjectId(id)}
+        onDeleteProject={handleDeleteProject}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         user={currentUser}
@@ -222,6 +243,8 @@ export function App() {
               }}
               onOpenCreateModal={() => setIsCreateModalOpen(true)}
               onOpenAssistant={() => setIsAssistantOpen(true)}
+              onSelectProject={(id) => setActiveProjectId(id)}
+              onDeleteProject={handleDeleteProject}
             />
           )}
 
